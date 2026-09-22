@@ -71,9 +71,8 @@ function Home() {
         <img className="hero-image" src="/images/goa-coastal-drive.jpg" alt="White SUV driving along a sunny Goa coastal road" data-testid="img-hero-coastal-drive" />
         <nav className="site-nav" aria-label="Main navigation">
           <div className="nav-inner">
-            <a href="#home" className="brand-lockup" data-testid="link-brand-home">
-              <span className="brand-mark">JG</span>
-              <span className="brand-name">Javed Goa Car Rental<small>est. goa · local since 2009</small></span>
+            <a href="#home" className="brand-lockup" aria-label="Javed Goa Car Rental" data-testid="link-brand-home">
+              <img className="brand-logo" src="/images/javed-goa-logo.png" alt="Javed Goa Car Rental" />
             </a>
             <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
               <a href="#fleet" onClick={() => setMenuOpen(false)} data-testid="link-nav-fleet">The fleet</a>
@@ -233,7 +232,7 @@ function Home() {
 
       <footer className="footer">
         <div className="footer-inner">
-          <a href="#home" className="brand-lockup" data-testid="link-footer-home"><span className="brand-mark">JG</span><span className="brand-name">Javed Goa Car Rental<small>est. goa · local since 2009</small></span></a>
+          <a href="#home" className="brand-lockup" aria-label="Javed Goa Car Rental" data-testid="link-footer-home"><img className="brand-logo" src="/images/javed-goa-logo.png" alt="Javed Goa Car Rental" /></a>
           <p className="footer-note">Made for slow mornings, hidden beaches<br />and taking the long way home.</p>
           <div className="footer-links"><a href="#fleet" data-testid="link-footer-fleet">Fleet</a><a href="#why-us" data-testid="link-footer-why">Our promise</a><a href="#contact" data-testid="link-footer-contact">Book a car</a></div>
         </div>
