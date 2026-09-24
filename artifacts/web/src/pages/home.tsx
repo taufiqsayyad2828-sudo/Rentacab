@@ -31,6 +31,17 @@ const fleet = [
     price: '₹3,500',
   },
   {
+    id: 'baleno',
+    name: 'Maruti Baleno',
+    type: 'hatchback' as const,
+    label: 'Easy automatic city drive',
+    image: '/images/goa-maruti-baleno.jpg',
+    seats: '5 seats',
+    transmission: 'Automatic',
+    fuel: 'Petrol',
+    price: '₹1,500',
+  },
+  {
     id: 'ertiga',
     name: 'Maruti Ertiga',
     type: 'family' as const,
