@@ -53,6 +53,16 @@ const fleet: FleetVehicle[] = [
     featured: false,
   },
   {
+    id: 'carens',
+    name: 'Kia Carens',
+    type: 'family',
+    label: 'Comfortable space for the whole crew',
+    image: '/images/goa-kia-carens.jpg',
+    fuel: 'Petrol',
+    price: '₹2,500',
+    featured: false,
+  },
+  {
     id: 'baleno',
     name: 'Maruti Baleno',
     type: 'hatchback' as const,
