@@ -31,6 +31,17 @@ const fleet = [
     price: '₹3,500',
   },
   {
+    id: 'fronx',
+    name: 'Maruti Fronx',
+    type: 'suv' as const,
+    label: 'Automatic crossover for every road',
+    image: '/images/goa-maruti-fronx.jpg',
+    seats: '5 seats',
+    transmission: 'Automatic',
+    fuel: 'Petrol',
+    price: '₹1,700',
+  },
+  {
     id: 'baleno',
     name: 'Maruti Baleno',
     type: 'hatchback' as const,
