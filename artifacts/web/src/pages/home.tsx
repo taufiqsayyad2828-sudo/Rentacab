@@ -63,6 +63,15 @@ const fleet: FleetVehicle[] = [
     featured: false,
   },
   {
+    id: 'innova-crysta',
+    name: 'Toyota Innova Crysta',
+    type: 'family',
+    label: 'Comfortable space for Goa road trips',
+    image: '/images/goa-toyota-innova-crysta.jpg',
+    price: '₹3,500',
+    featured: false,
+  },
+  {
     id: 'baleno',
     name: 'Maruti Baleno',
     type: 'hatchback' as const,
