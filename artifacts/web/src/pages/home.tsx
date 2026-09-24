@@ -8,18 +8,6 @@ const PHONE_LINK = 'tel:+918149822247';
 
 const fleet = [
   {
-    id: 'swift',
-    name: 'Maruti Swift',
-    type: 'hatchback' as const,
-    label: 'Easy island hopper',
-    image: '/images/goa-roadside-hatchback.jpg',
-    seats: '5 seats',
-    transmission: 'Manual',
-    fuel: 'Petrol',
-    price: '₹1,200',
-    featured: true,
-  },
-  {
     id: 'creta',
     name: 'Hyundai Creta',
     type: 'suv' as const,
@@ -29,6 +17,7 @@ const fleet = [
     transmission: 'Automatic',
     fuel: 'Petrol',
     price: '₹3,500',
+    featured: false,
   },
   {
     id: 'fronx',
@@ -40,6 +29,7 @@ const fleet = [
     transmission: 'Automatic',
     fuel: 'Petrol',
     price: '₹1,700',
+    featured: false,
   },
   {
     id: 'baleno',
@@ -51,17 +41,7 @@ const fleet = [
     transmission: 'Automatic',
     fuel: 'Petrol',
     price: '₹1,500',
-  },
-  {
-    id: 'ertiga',
-    name: 'Maruti Ertiga',
-    type: 'family' as const,
-    label: 'Room for the whole gang',
-    image: '/images/goa-family-mpv.jpg',
-    seats: '7 seats',
-    transmission: 'Manual',
-    fuel: 'Petrol',
-    price: '₹1,900',
+    featured: false,
   },
 ];
 
