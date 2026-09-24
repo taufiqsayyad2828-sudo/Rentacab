@@ -24,11 +24,11 @@ const fleet = [
     name: 'Hyundai Creta',
     type: 'suv' as const,
     label: 'Your beach-to-fort runabout',
-    image: '/images/goa-coastal-drive.jpg',
+    image: '/images/goa-hyundai-creta.jpg',
     seats: '5 seats',
     transmission: 'Automatic',
     fuel: 'Petrol',
-    price: '₹2,200',
+    price: '₹3,500',
   },
   {
     id: 'ertiga',
