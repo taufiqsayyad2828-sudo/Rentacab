@@ -2,11 +2,23 @@ import { useState } from 'react';
 import { ArrowRight, CarFront, Check, ChevronDown, Clock3, Fuel, HeartHandshake, MapPin, Menu, MessageCircle, Navigation, Phone, ShieldCheck, Sparkles, Star, Users, X } from 'lucide-react';
 
 type FleetFilter = 'all' | 'hatchback' | 'suv' | 'family';
+type FleetVehicle = {
+  id: string;
+  name: string;
+  type: FleetFilter;
+  label: string;
+  image: string;
+  seats?: string;
+  transmission?: string;
+  fuel?: string;
+  price: string;
+  featured?: boolean;
+};
 
 const WHATSAPP_LINK = 'https://wa.me/918149822247?text=Hi%20Javed%20Goa%20Car%20Rental%2C%20I%27d%20like%20to%20book%20a%20car.';
 const PHONE_LINK = 'tel:+918149822247';
 
-const fleet = [
+const fleet: FleetVehicle[] = [
   {
     id: 'creta',
     name: 'Hyundai Creta',
@@ -29,6 +41,15 @@ const fleet = [
     transmission: 'Automatic',
     fuel: 'Petrol',
     price: '₹1,700',
+    featured: false,
+  },
+  {
+    id: 'thar',
+    name: 'Convertible Thar',
+    type: 'suv',
+    label: 'Goa adventure, open-air style',
+    image: '/images/goa-thar-convertible.jpg',
+    price: '₹3,500',
     featured: false,
   },
   {
@@ -143,11 +164,13 @@ function Home() {
                 <div className="card-content">
                   <div className="card-meta">{car.label}</div>
                   <h3>{car.name}</h3>
-                  <div className="card-specs">
-                    <span><Users size={13} /> {car.seats}</span>
-                    <span><CarFront size={13} /> {car.transmission}</span>
-                    <span><Fuel size={13} /> {car.fuel}</span>
-                  </div>
+                  {(car.seats || car.transmission || car.fuel) && (
+                    <div className="card-specs">
+                      {car.seats && <span><Users size={13} /> {car.seats}</span>}
+                      {car.transmission && <span><CarFront size={13} /> {car.transmission}</span>}
+                      {car.fuel && <span><Fuel size={13} /> {car.fuel}</span>}
+                    </div>
+                  )}
                   <div className="card-footer">
                     <div className="price">{car.price} <small>/ day</small></div>
                     <button className="reserve-link" onClick={() => scrollToBooking(car.name)} data-testid={`button-reserve-${car.id}`}>Check dates <ArrowRight size={15} /></button>
