@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getGetReviewsQueryKey, useCreateReview, useGetReviews, type Review } from '@workspace/api-client-react';
-import { ArrowRight, CarFront, Check, ChevronDown, Clock3, Fuel, HeartHandshake, MapPin, Menu, MessageCircle, Navigation, Phone, ShieldCheck, Sparkles, Star, Users, X } from 'lucide-react';
+import { ArrowRight, CalendarDays, CarFront, Check, ChevronDown, Clock3, Fuel, HeartHandshake, MapPin, Menu, MessageCircle, Navigation, Phone, ShieldCheck, Sparkles, Star, Users, X } from 'lucide-react';
 
 type FleetFilter = 'all' | 'hatchback' | 'suv' | 'family';
 type FleetVehicle = {
@@ -27,6 +27,20 @@ const ratingLabels: Record<number, string> = {
   4: 'Loved it',
   5: 'Exceptional',
 };
+
+function getTodayInputValue() {
+  const now = new Date();
+  const localNow = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+  return localNow.toISOString().slice(0, 10);
+}
+
+function formatBookingDate(value: string) {
+  return new Intl.DateTimeFormat('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(`${value}T00:00:00`));
+}
 
 const fleet: FleetVehicle[] = [
   {
@@ -108,7 +122,9 @@ function ReviewStars({ rating, label }: { rating: number; label?: string }) {
 function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [filter, setFilter] = useState<FleetFilter>('all');
-  const [notice, setNotice] = useState('');
+  const [bookingCar, setBookingCar] = useState<FleetVehicle | null>(null);
+  const [pickupDate, setPickupDate] = useState('');
+  const [returnDate, setReturnDate] = useState('');
   const [reviewName, setReviewName] = useState('');
   const [reviewLocation, setReviewLocation] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
@@ -134,6 +150,18 @@ function Home() {
   });
 
   const filteredFleet = fleet.filter((car) => filter === 'all' || car.type === filter);
+  const todayInput = getTodayInputValue();
+  const bookingDatesReady = Boolean(bookingCar && pickupDate && returnDate && returnDate >= pickupDate);
+  const rentalDays = bookingDatesReady
+    ? Math.max(1, Math.ceil((new Date(`${returnDate}T00:00:00`).getTime() - new Date(`${pickupDate}T00:00:00`).getTime()) / 86_400_000))
+    : 0;
+  const listedDailyRate = bookingCar ? Number(bookingCar.price.replace(/[^\d]/g, '')) : 0;
+  const estimatedTotal = listedDailyRate * rentalDays;
+  const bookingWhatsAppLink = bookingCar && bookingDatesReady
+    ? `https://wa.me/918149822247?text=${encodeURIComponent(
+        `Hi Javed Goa Car Rental, I’d like to check availability.\n\nCar: ${bookingCar.name}\nPickup: ${formatBookingDate(pickupDate)}\nReturn: ${formatBookingDate(returnDate)}\nDuration: ${rentalDays} day${rentalDays === 1 ? '' : 's'}\nListed rate: ${bookingCar.price} / day\nEstimated total: ₹${estimatedTotal.toLocaleString('en-IN')}\n\nPlease confirm availability and the final price.`,
+      )}`
+    : '#';
 
   function submitReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -148,12 +176,16 @@ function Home() {
     });
   }
 
-  function scrollToBooking(carName?: string) {
-    if (carName) {
-      setNotice(`${carName} selected — message Javed to check dates.`);
-    }
-    document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' });
-    window.setTimeout(() => setNotice(''), 4500);
+  function openBooking(car: FleetVehicle) {
+    setBookingCar(car);
+    setPickupDate('');
+    setReturnDate('');
+  }
+
+  function closeBooking() {
+    setBookingCar(null);
+    setPickupDate('');
+    setReturnDate('');
   }
 
   return (
@@ -249,7 +281,7 @@ function Home() {
                   )}
                   <div className="card-footer">
                     <div className="price">{car.price} <small>/ day</small></div>
-                    <button className="reserve-link" onClick={() => scrollToBooking(car.name)} data-testid={`button-reserve-${car.id}`}>Check dates <ArrowRight size={15} /></button>
+                    <button className="reserve-link" onClick={() => openBooking(car)} aria-label={`Select dates for ${car.name}`} data-testid={`button-reserve-${car.id}`}>Check dates <ArrowRight size={15} /></button>
                   </div>
                 </div>
               </article>
@@ -397,7 +429,62 @@ function Home() {
         <div className="footer-inner footer-bottom"><span>© 2024 Javed Goa Car Rental</span><span>Panaji · North Goa · South Goa</span></div>
       </footer>
 
-      {notice && <div className="toast-note" role="status" data-testid="status-booking-selection"><Check size={16} /> {notice}</div>}
+      {bookingCar && (
+        <div className="booking-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && closeBooking()}>
+          <section className="booking-modal" role="dialog" aria-modal="true" aria-labelledby="booking-modal-title" data-testid="dialog-booking">
+            <div className="booking-modal-header">
+              <div>
+                <p className="section-kicker">Plan your drive</p>
+                <h2 id="booking-modal-title">Book the {bookingCar.name}.</h2>
+                <p>Choose your dates and send Javed a ready-to-check request.</p>
+              </div>
+              <button className="booking-modal-close" type="button" onClick={closeBooking} aria-label="Close booking calendar" data-testid="button-close-booking">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="booking-car-summary">
+              <img src={bookingCar.image} alt="" />
+              <div><strong>{bookingCar.name}</strong><span>{bookingCar.price} / day · Goa availability</span></div>
+            </div>
+            <div className="booking-date-grid">
+              <label>
+                Pick-up date
+                <input type="date" min={todayInput} value={pickupDate} onChange={(event) => {
+                  setPickupDate(event.target.value);
+                  if (returnDate && event.target.value > returnDate) setReturnDate('');
+                }} data-testid="input-pickup-date" />
+              </label>
+              <label>
+                Return date
+                <input type="date" min={pickupDate || todayInput} value={returnDate} onChange={(event) => setReturnDate(event.target.value)} data-testid="input-return-date" />
+              </label>
+            </div>
+            <div className="booking-calendar-note"><CalendarDays size={16} /> Dates are sent to Javed with your selected car. Availability is confirmed personally on WhatsApp.</div>
+            {bookingDatesReady && (
+              <div className="booking-preview" data-testid="text-booking-preview">
+                <span>{formatBookingDate(pickupDate)} → {formatBookingDate(returnDate)}</span>
+                <strong>{rentalDays} day{rentalDays === 1 ? '' : 's'} · Est. ₹{estimatedTotal.toLocaleString('en-IN')}</strong>
+              </div>
+            )}
+            <div className="booking-modal-actions">
+              <button className="button-ghost" type="button" onClick={closeBooking}>Maybe later</button>
+              <a
+                className={`button-primary ${bookingDatesReady ? '' : 'button-disabled'}`}
+                href={bookingWhatsAppLink}
+                target="_blank"
+                rel="noreferrer"
+                aria-disabled={!bookingDatesReady}
+                onClick={(event) => {
+                  if (!bookingDatesReady) event.preventDefault();
+                }}
+                data-testid="link-booking-whatsapp"
+              >
+                <MessageCircle size={16} /> WhatsApp Javed
+              </a>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
