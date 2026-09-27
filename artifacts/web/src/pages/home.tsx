@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { type FormEvent, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { getGetReviewsQueryKey, useCreateReview, useGetReviews, type Review } from '@workspace/api-client-react';
 import { ArrowRight, CarFront, Check, ChevronDown, Clock3, Fuel, HeartHandshake, MapPin, Menu, MessageCircle, Navigation, Phone, ShieldCheck, Sparkles, Star, Users, X } from 'lucide-react';
 
 type FleetFilter = 'all' | 'hatchback' | 'suv' | 'family';
@@ -17,6 +19,14 @@ type FleetVehicle = {
 
 const WHATSAPP_LINK = 'https://wa.me/918149822247?text=Hi%20Javed%20Goa%20Car%20Rental%2C%20I%27d%20like%20to%20book%20a%20car.';
 const PHONE_LINK = 'tel:+918149822247';
+
+const ratingLabels: Record<number, string> = {
+  1: 'Not great',
+  2: 'Could be better',
+  3: 'Good',
+  4: 'Loved it',
+  5: 'Exceptional',
+};
 
 const fleet: FleetVehicle[] = [
   {
@@ -85,12 +95,58 @@ const fleet: FleetVehicle[] = [
   },
 ];
 
+function ReviewStars({ rating, label }: { rating: number; label?: string }) {
+  return (
+    <div className="review-stars" aria-label={label ?? `${rating} out of 5 stars`}>
+      {Array.from({ length: 5 }, (_, index) => (
+        <Star key={index} size={12} fill={index < rating ? 'currentColor' : 'none'} />
+      ))}
+    </div>
+  );
+}
+
 function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [filter, setFilter] = useState<FleetFilter>('all');
   const [notice, setNotice] = useState('');
+  const [reviewName, setReviewName] = useState('');
+  const [reviewLocation, setReviewLocation] = useState('');
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewFormMessage, setReviewFormMessage] = useState('');
+  const queryClient = useQueryClient();
+  const { data: submittedReviews = [], isLoading: reviewsLoading } = useGetReviews();
+  const createReviewMutation = useCreateReview({
+    mutation: {
+      onSuccess: (review) => {
+        queryClient.setQueryData<Review[]>(getGetReviewsQueryKey(), (current = []) => [review, ...current]);
+        queryClient.invalidateQueries({ queryKey: getGetReviewsQueryKey() });
+        setReviewName('');
+        setReviewLocation('');
+        setReviewRating(5);
+        setReviewComment('');
+        setReviewFormMessage('Thanks for sharing your Goa story.');
+      },
+      onError: () => {
+        setReviewFormMessage('We could not submit that review. Please try again.');
+      },
+    },
+  });
 
   const filteredFleet = fleet.filter((car) => filter === 'all' || car.type === filter);
+
+  function submitReview(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setReviewFormMessage('');
+    createReviewMutation.mutate({
+      data: {
+        name: reviewName.trim(),
+        location: reviewLocation.trim(),
+        rating: reviewRating,
+        comment: reviewComment.trim(),
+      },
+    });
+  }
 
   function scrollToBooking(carName?: string) {
     if (carName) {
@@ -120,6 +176,7 @@ function Home() {
               <a href="#fleet" onClick={() => setMenuOpen(false)} data-testid="link-nav-fleet">The fleet</a>
               <a href="#why-us" onClick={() => setMenuOpen(false)} data-testid="link-nav-why">Why Javed</a>
               <a href="#routes" onClick={() => setMenuOpen(false)} data-testid="link-nav-routes">Goa routes</a>
+              <a href="#reviews" onClick={() => setMenuOpen(false)} data-testid="link-nav-reviews">Reviews</a>
               <a href="#contact" onClick={() => setMenuOpen(false)} data-testid="link-nav-contact">Contact</a>
             </div>
             <a className="nav-call" href={PHONE_LINK} data-testid="link-nav-call"><Phone size={14} /> Call to book</a>
@@ -245,17 +302,74 @@ function Home() {
             <h2 className="section-heading">Arrive as<br /><em>visitors.</em><br />Leave as friends.</h2>
             <p className="section-intro">A few notes from people who chose the scenic route.</p>
           </div>
-          <div>
+          <div className="review-content">
             <article className="review-card" data-testid="review-card-1">
-              <div className="review-stars" aria-label="5 out of 5 stars"><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /></div>
+              <ReviewStars rating={5} />
               <blockquote>“Javed met us at 6am with a spotless Swift and a list of breakfast places. That list alone was worth the trip.”</blockquote>
               <div className="review-author"><i className="author-dot" /> Meera & Arjun · Bengaluru</div>
             </article>
             <article className="review-card" data-testid="review-card-2">
-              <div className="review-stars" aria-label="5 out of 5 stars"><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /></div>
+              <ReviewStars rating={5} />
               <blockquote>“No deposit drama, no surprise charges, no waiting around. Just a great car and a very kind human.”</blockquote>
               <div className="review-author"><i className="author-dot" /> Oliver & Sophie · London</div>
             </article>
+            {reviewsLoading && <div className="review-loading">Loading recent traveller notes…</div>}
+            {submittedReviews.map((review) => (
+              <article className="review-card submitted-review" key={review.id} data-testid={`review-card-${review.id}`}>
+                <ReviewStars rating={review.rating} />
+                <blockquote>“{review.comment}”</blockquote>
+                <div className="review-author"><i className="author-dot" /> {review.name} · {review.location}</div>
+              </article>
+            ))}
+            <form className="review-form" onSubmit={submitReview} data-testid="form-submit-review">
+              <div className="review-form-head">
+                <div>
+                  <p className="section-kicker">Your turn</p>
+                  <h3>How was your drive?</h3>
+                </div>
+                <span className="review-form-note">Takes 30 seconds</span>
+              </div>
+              <div className="review-rating-field">
+                <span className="review-field-label">Your rating</span>
+                <div className="rating-picker" role="radiogroup" aria-label="Choose a rating">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      type="button"
+                      className={`rating-button ${reviewRating >= rating ? 'active' : ''}`}
+                      key={rating}
+                      role="radio"
+                      aria-checked={reviewRating === rating}
+                      aria-label={`${rating} out of 5 stars`}
+                      onClick={() => setReviewRating(rating)}
+                      data-testid={`button-review-rating-${rating}`}
+                    >
+                      <Star size={17} fill="currentColor" />
+                    </button>
+                  ))}
+                </div>
+                <span className="rating-label">{ratingLabels[reviewRating]}</span>
+              </div>
+              <div className="review-form-fields">
+                <label>
+                  Your name
+                  <input value={reviewName} onChange={(event) => setReviewName(event.target.value)} minLength={2} maxLength={60} required placeholder="e.g. Priya & Karan" data-testid="input-review-name" />
+                </label>
+                <label>
+                  Where are you from?
+                  <input value={reviewLocation} onChange={(event) => setReviewLocation(event.target.value)} minLength={2} maxLength={80} required placeholder="e.g. Mumbai" data-testid="input-review-location" />
+                </label>
+                <label className="review-comment-field">
+                  Your review
+                  <textarea value={reviewComment} onChange={(event) => setReviewComment(event.target.value)} minLength={10} maxLength={600} required placeholder="Tell future travellers what made the trip easy." data-testid="input-review-comment" />
+                </label>
+              </div>
+              <div className="review-form-footer">
+                <span className="review-form-message" role="status" data-testid="status-review-form">{reviewFormMessage}</span>
+                <button className="button-primary" type="submit" disabled={createReviewMutation.isPending} data-testid="button-submit-review">
+                  {createReviewMutation.isPending ? 'Sending…' : 'Share your review'} <ArrowRight size={15} />
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </section>
@@ -278,7 +392,7 @@ function Home() {
         <div className="footer-inner">
           <a href="#home" className="brand-lockup" aria-label="Javed Goa Car Rental" data-testid="link-footer-home"><img className="brand-logo" src="/images/javed-goa-logo.png" alt="Javed Goa Car Rental" /></a>
           <p className="footer-note">Made for slow mornings, hidden beaches<br />and taking the long way home.</p>
-          <div className="footer-links"><a href="#fleet" data-testid="link-footer-fleet">Fleet</a><a href="#why-us" data-testid="link-footer-why">Our promise</a><a href="#contact" data-testid="link-footer-contact">Book a car</a></div>
+          <div className="footer-links"><a href="#fleet" data-testid="link-footer-fleet">Fleet</a><a href="#why-us" data-testid="link-footer-why">Our promise</a><a href="#reviews" data-testid="link-footer-reviews">Reviews</a><a href="#contact" data-testid="link-footer-contact">Book a car</a></div>
         </div>
         <div className="footer-inner footer-bottom"><span>© 2024 Javed Goa Car Rental</span><span>Panaji · North Goa · South Goa</span></div>
       </footer>

@@ -1,0 +1,1 @@
+- [Orval fetch typings](orval-fetch-typings.md) — Generated request helpers need DOM iterable types in the client library compiler settings.

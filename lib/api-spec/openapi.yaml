@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: reviews
+    description: Customer review operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,47 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /reviews:
+    get:
+      operationId: getReviews
+      tags: [reviews]
+      summary: List customer reviews
+      responses:
+        "200":
+          description: Published customer reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+        "500":
+          description: Server error
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Submit a customer review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewInput"
+      responses:
+        "201":
+          description: Created review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+        "400":
+          description: Invalid review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
 components:
   schemas:
     HealthStatus:
@@ -33,4 +76,48 @@ components:
           type: string
       required:
         - status
-
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        location:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, location, rating, comment, createdAt]
+    ReviewInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 60
+        location:
+          type: string
+          minLength: 2
+          maxLength: 80
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          minLength: 10
+          maxLength: 600
+      required: [name, location, rating, comment]
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
